@@ -29,23 +29,19 @@ public class Client {
         ) {
             BufferedReader stdIn =
                     new BufferedReader(new InputStreamReader(System.in));
+
             String fromServer;
-            String fromUser;
+            String jsonRequest;
+            Protocol p = new Protocol();
 
-            // Wait for welcome
-            fromServer = in.readLine();
-            System.out.println("Server: " + fromServer);
+            while ((fromServer = in.readLine())!= null){
 
-            // Send request
-            final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-            objectBuilder.add("operation", "lukas");
-            objectBuilder.add("param1", 10);
-//            objectBuilder.add("param2", 2);
-            out.println(objectBuilder.build().toString());
+                System.out.println("DEBUG: " + fromServer);
+                jsonRequest = p.ClientProcessInput(fromServer);
 
-            // Display answer
-            fromServer = in.readLine();
-            System.out.println("Server: " + fromServer);
+                if(jsonRequest.equals("{}")) break;
+                out.println(jsonRequest);
+            }
 
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host " + hostName);

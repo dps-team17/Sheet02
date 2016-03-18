@@ -1,26 +1,22 @@
 package team17.sheet02;
 
+import sun.plugin.dom.exception.InvalidStateException;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import javax.management.OperationsException;
 import java.io.*;
 import java.net.Socket;
 import java.security.InvalidParameterException;
 
 public class Protocol {
+    public static final int SERVICE_PORT = 12345;
+    public static final String STATE_AUTHENTICATION = "Authenticate";
+    public static final String STATE_READY = "Welcome";
+    public static final String STATE_CALCULATION_SUCCESS = "Calculation successful";
+    public static final String STATE_CALCULATION_FAIL = "Calculation failed";
 
-    private static final int INIT = 0;
-    private static final int WAITING = 1;
-
-    private int state;
-
-    public Protocol() {
-        state = 0;
-    }
-
-    public static final int PORT = 12345;
 
     public void request(Socket client, String operation, int... args) throws Exception {
         try (PrintWriter out =
@@ -38,21 +34,21 @@ public class Protocol {
             final JsonObjectBuilder builder = Json.createObjectBuilder();
             builder.add("operation", operation);
             for (int i = 0; i < args.length; i++) {
-                builder.add(String.format("param%i", i + 1), args[i]);
+                builder.add(String.format("param%d", i + 1), args[i]);
             }
             out.println(builder.build().toString());
 
             // Wait for responseString
             responseString = in.readLine();
-            if(responseString == null) throw new Exception("Response is null");
+            if (responseString == null) throw new Exception("Response is null");
 
             final JsonReader reader = Json.createReader(new StringReader(responseString));
             final JsonObject response = reader.readObject();
 
             String error = response.getString("error");
-            if(error != null) throw new Exception(error);
+            if (error != null) throw new Exception(error);
 
-            int result  = response.getInt("result");
+            int result = response.getInt("result");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,67 +56,59 @@ public class Protocol {
     }
 
     public void replay(Socket server) {
-        try (PrintWriter out =
-                     new PrintWriter(server.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(
-                     new InputStreamReader(server.getInputStream()));
+        try (PrintWriter out = new PrintWriter(server.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(server.getInputStream()));
         ) {
-            String inputLine, outputLine;
+            RemoteCalculatorService srv = new RemoteCalculatorService(new Calculator());
+            String request = null;
+            String response = null;
 
-            // Initiate conversation with client
-            Protocol p = new Protocol();
-            outputLine = p.processInput(null);
-            out.println(outputLine);
+            do {
+                response = srv.Process(request);
+                if(response == null) break;
 
-            while ((inputLine = in.readLine()) != null) {
-                outputLine = p.processInput(inputLine);
-                out.println(outputLine);
-                if (outputLine.equals("Bye."))
-                    break;
-            }
+                out.println(response);
+
+            } while ((request = in.readLine()) != null);
+
+            server.close();
+
         } catch (IOException e) {
-            System.out.println("Exception caught when trying to listen on port "
-                    + PORT + " or listening for a connection");
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
 
-    public String processInput(String theInput) {
-        String status = null;
-        int result = 0;
-        String error = null;
+    public String ClientProcessInput(String jsonResponse){
 
+        JsonObject response = Json.createReader(new StringReader(jsonResponse)).readObject();
 
-        switch (state) {
-            case INIT:
-                status = "Welcome. Waiting for requests...";
-                state = WAITING;
+        String status = response.getString("status");
+        String error = response.getString("error", null);
+        int result;
+
+        JsonObjectBuilder request = Json.createObjectBuilder();
+
+        switch (status){
+
+            case Protocol.STATE_AUTHENTICATION:
+                request.add("status", "Authenticate");
+                request.add("name", "Daniel");
                 break;
-            case WAITING:
-                try {
-                    status = "Calculation successful";
-                    result = calculate(theInput);
-                } catch (Exception e) {
-                    error = e.getMessage();
-                }
+            case Protocol.STATE_READY:
+                request.add("operation", "lukas");
+                request.add("param1", 10);
+                request.add("param2", 2);
+                break;
+            case STATE_CALCULATION_SUCCESS:
+                break;
+            case STATE_CALCULATION_FAIL:
                 break;
             default:
-                error = "Unknown state";
+                throw new InvalidStateException("There is no action for state " + status);
         }
 
-
-        final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-        objectBuilder.add("status", status);
-        objectBuilder.add("result", result);
-
-        if (error == null) {
-            objectBuilder.addNull("error");
-        } else {
-            objectBuilder.add("error", error);
-        }
-
-        return objectBuilder.build().toString();
+        return request.build().toString();
     }
 
     private int calculate(String jsonString) {

@@ -1,20 +1,24 @@
 package team17.sheet02;
 
-class Calculator {
+public class Calculator implements ICalculator {
 
-    int Add(int a, int b) {
+    @Override
+    public int Add(int a, int b) {
         return a + b;
     }
 
-    int Subtract(int a, int b) {
+    @Override
+    public int Subtract(int a, int b) {
         return a - b;
     }
 
-    int Multiply(int a, int b) {
+    @Override
+    public int Multiply(int a, int b) {
         return a * b;
     }
 
-    int Lukas(int a) {
+    @Override
+    public int Lukas(int a) {
 
         if (a == 0) {
             return 2;

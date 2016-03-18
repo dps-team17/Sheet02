@@ -8,7 +8,7 @@ public class CalculatorTest {
 
     @Test
     public void Add_ValidParameters_ReturnsValidResult(){
-        Calculator sut = new Calculator();
+        ICalculator sut = new Calculator();
 
         int a = 1;
         int b = 2;
@@ -21,7 +21,7 @@ public class CalculatorTest {
 
     @Test
     public void Subtract_ValidParameters_ReturnsValidResult(){
-        Calculator sut = new Calculator();
+        ICalculator sut = new Calculator();
 
         int a = 1;
         int b = 2;
@@ -34,7 +34,7 @@ public class CalculatorTest {
 
     @Test
     public void Multiply_ValidParameters_ReturnsValidResult(){
-        Calculator sut = new Calculator();
+        ICalculator sut = new Calculator();
 
         int a = 1;
         int b = 2;
@@ -47,7 +47,7 @@ public class CalculatorTest {
 
     @Test
     public void Lukas_OfZero_IsTwo(){
-        Calculator sut = new Calculator();
+        ICalculator sut = new Calculator();
 
         int a = 0;
 
@@ -59,7 +59,7 @@ public class CalculatorTest {
 
     @Test
     public void Lukas_OfOne_IsOne(){
-        Calculator sut = new Calculator();
+        ICalculator sut = new Calculator();
 
         int a = 1;
 
@@ -71,7 +71,7 @@ public class CalculatorTest {
 
     @Test
     public void Lukas_OfTen_Is123(){
-        Calculator sut = new Calculator();
+        ICalculator sut = new Calculator();
 
         int a = 10;
 
