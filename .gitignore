@@ -71,6 +71,7 @@ local.properties
 .idea/tasks.xml
 .idea/dictionaries
 .idea/vcs.xml
+/bin
 .idea/jsLibraryMappings.xml
 
 # Sensitive or high-churn files:
