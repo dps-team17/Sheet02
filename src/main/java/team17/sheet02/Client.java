@@ -10,46 +10,20 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class Client {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
-        if (args.length != 2) {
-            System.err.println(
-                    "Usage: java Client <host name> <port number>");
-            System.exit(1);
-        }
+        String host = "127.0.0.1";
+        String username = "Daniel";
 
-        String hostName = args[0];
-        int portNumber = Integer.parseInt(args[1]);
+        int param1, param2, result;
+        ICalculator calculator = new RemoteCalculatorClient(host, username);
 
-        try (
-                Socket socket = new Socket(hostName, portNumber);
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(socket.getInputStream()));
-        ) {
-            BufferedReader stdIn =
-                    new BufferedReader(new InputStreamReader(System.in));
+        param1 = 1;
+        param2 = 1;
 
-            String fromServer;
-            String jsonRequest;
-            Protocol p = new Protocol();
+        result = calculator.Add(param1, param2);
+        //result = calculator.Lukas(10);
 
-            while ((fromServer = in.readLine())!= null){
-
-                System.out.println("DEBUG: " + fromServer);
-                jsonRequest = p.ClientProcessInput(fromServer);
-
-                if(jsonRequest.equals("{}")) break;
-                out.println(jsonRequest);
-            }
-
-        } catch (UnknownHostException e) {
-            System.err.println("Don't know about host " + hostName);
-            System.exit(1);
-        } catch (IOException e) {
-            System.err.println("Couldn't get I/O for the connection to " +
-                    hostName);
-            System.exit(1);
-        }
+        System.out.println(String.format("%d + %d = %d", param1, param2, result));
     }
 }

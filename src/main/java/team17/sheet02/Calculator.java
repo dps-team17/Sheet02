@@ -20,7 +20,10 @@ public class Calculator implements ICalculator {
     @Override
     public int Lukas(int a) {
 
-        if (a == 0) {
+        if(a < 0){
+            throw new IllegalArgumentException("Can not calculate lukas number of negative values");
+        }
+        else if (a == 0) {
             return 2;
         } else if (a == 1) {
             return 1;

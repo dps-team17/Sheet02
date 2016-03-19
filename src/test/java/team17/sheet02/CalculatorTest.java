@@ -80,4 +80,13 @@ public class CalculatorTest {
 
         assertEquals(expected, actual);
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void Lukas_NegativeParam_ThrowsException(){
+        ICalculator sut = new Calculator();
+
+        int a = -1;
+
+        sut.Lukas(a);
+    }
 }

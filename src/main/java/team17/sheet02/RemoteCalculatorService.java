@@ -95,4 +95,8 @@ public class RemoteCalculatorService {
 
         return result;
     }
+
+    private boolean isAuthorized(String username){
+        return username.equals("Daniel");
+    }
 }
