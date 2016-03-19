@@ -22,44 +22,28 @@ public class RemoteCalculatorService {
 
     public String Process(String jsonRequest) {
 
-        String status = null;
-        int result = 0;
-        String error = null;
+        String response = null;
 
         switch (state) {
             case INIT:
-                status = Protocol.STATE_AUTHENTICATION;
+                response = getResponseString(Protocol.STATE_AUTHENTICATION,null, 0);
                 state = AUTHENTICATION;
                 break;
             case AUTHENTICATION:
-                status = Protocol.STATE_READY;
-                state = READY;
+                response = getAuthenticationResponse(jsonRequest);
                 break;
             case READY:
                 try {
-                    status = Protocol.STATE_CALCULATION_SUCCESS;
-                    result = calculate(jsonRequest);
+                    response = getResponseString(Protocol.STATE_CALCULATION_SUCCESS, null, calculate(jsonRequest));
                 } catch (OperationNotSupportedException e) {
-                    status = Protocol.STATE_CALCULATION_FAIL;
-                    error = e.getMessage();
+                    response = getResponseString(Protocol.STATE_CALCULATION_FAIL, e.getMessage(), 0);
                 }
                 break;
             default:
-                error = "Unknown state";
+                response = getResponseString(Protocol.STATE_CALCULATION_FAIL, "Unknown state", 0);
         }
 
-
-        final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-        objectBuilder.add("status", status);
-        objectBuilder.add("result", result);
-
-        if (error == null) {
-            objectBuilder.addNull("error");
-        } else {
-            objectBuilder.add("error", error);
-        }
-
-        return objectBuilder.build().toString();
+        return response;
     }
 
     private int calculate(String jsonRequest) throws OperationNotSupportedException {
@@ -98,5 +82,30 @@ public class RemoteCalculatorService {
 
     private boolean isAuthorized(String username){
         return username.equals("Daniel");
+    }
+
+    private String getResponseString(String status, String error, int result){
+
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        builder.add("status", status);
+        builder.add("result", result);
+
+        if (error == null) {
+            builder.addNull("error");
+        } else {
+            builder.add("error", error);
+        }
+
+        return builder.build().toString();
+    }
+
+    private String getAuthenticationResponse(String jsonRequest){
+        JsonObject request = Json.createReader(new StringReader(jsonRequest)).readObject();
+        String username = request.getString("name");
+
+        if(!username.equals("Daniel")) return null;
+
+        state = READY;
+        return getResponseString(Protocol.STATE_READY, null, 0);
     }
 }
