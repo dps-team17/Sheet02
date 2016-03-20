@@ -7,30 +7,30 @@ import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.Socket;
 
-public class RemoteCalculatorService {
+class RemoteCalculatorService {
 
     private static final int INIT = 0;
     private static final int AUTHENTICATION = 1;
     private static final int READY = 2;
 
     private int state;
-    private ICalculator calculator;
+    private final ICalculator calculator;
 
-    public RemoteCalculatorService(ICalculator calculator) {
+    RemoteCalculatorService(ICalculator calculator) {
         state = 0;
         this.calculator = calculator;
     }
 
-    public void handleRequest(Socket server) {
+    void handleRequest(Socket server) {
         try (PrintWriter out = new PrintWriter(server.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(server.getInputStream()));
+             BufferedReader in = new BufferedReader(new InputStreamReader(server.getInputStream()))
         ) {
             RemoteCalculatorService srv = new RemoteCalculatorService(new Calculator());
             String request = null;
-            String response = null;
+            String response;
 
             do {
-                System.out.println(String.format("DEBUG: " + request));
+                System.out.println("DEBUG: " + request);
                 response = srv.Process(request);
                 if (response == null) break;
 
@@ -47,7 +47,7 @@ public class RemoteCalculatorService {
 
     private String Process(String jsonRequest) {
 
-        String response = null;
+        String response;
 
         switch (state) {
             case INIT:
@@ -60,12 +60,12 @@ public class RemoteCalculatorService {
             case READY:
                 try {
                     response = getResponseString(Protocol.STATE_CALCULATION_SUCCESS, null, calculate(jsonRequest));
-                } catch (OperationNotSupportedException e) {
-                    response = getResponseString(Protocol.STATE_CALCULATION_FAIL, e.getMessage(), 0);
+                } catch (OperationNotSupportedException | IllegalArgumentException e) {
+                    response = getResponseString(Protocol.STATE_CALCULATION_FAILED, e.getMessage(), 0);
                 }
                 break;
             default:
-                response = getResponseString(Protocol.STATE_CALCULATION_FAIL, "Unknown state", 0);
+                response = getResponseString(Protocol.STATE_CALCULATION_FAILED, "Unknown state", 0);
         }
 
         return response;
@@ -124,7 +124,7 @@ public class RemoteCalculatorService {
         JsonObject request = Json.createReader(new StringReader(jsonRequest)).readObject();
         String username = request.getString("name");
 
-        if (!isAuthorized(username)) return getResponseString(Protocol.STATE_AUTHENTICATION_FAIL, null, 0);
+        if (!isAuthorized(username)) return getResponseString(Protocol.STATE_AUTHENTICATION_FAILED, null, 0);
 
         state = READY;
         return getResponseString(Protocol.STATE_AUTHENTICATION_SUCCESS, null, 0);

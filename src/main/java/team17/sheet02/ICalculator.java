@@ -1,9 +1,7 @@
 package team17.sheet02;
 
 
-import javax.naming.AuthenticationException;
-
-public interface ICalculator {
+interface ICalculator {
     int Add(int a, int b) throws CalculationException;
 
     int Subtract(int a, int b) throws CalculationException;

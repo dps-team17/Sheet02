@@ -5,20 +5,18 @@ import sun.plugin.dom.exception.InvalidStateException;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import javax.naming.AuthenticationException;
 import java.io.*;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
-public class RemoteCalculatorClient implements ICalculator {
+class RemoteCalculatorClient implements ICalculator {
 
-    private String host;
-    private String username;
+    private final String host;
+    private final String username;
     private String calculationRequest;
     private int calculationResult;
 
 
-    public RemoteCalculatorClient(String host, String username) {
+    RemoteCalculatorClient(String host, String username) {
         this.host = host;
         this.username = username;
     }
@@ -67,23 +65,27 @@ public class RemoteCalculatorClient implements ICalculator {
         try (
                 Socket socket = new Socket(host, Protocol.SERVICE_PORT);
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
         ) {
 
             String jsonResponse;
             String nextRequest;
 
+            System.out.println("\n\nSTATUS: Connecting remote server...");
+
             while ((jsonResponse = in.readLine()) != null) {
 
-                System.out.println("DEBUG: " + jsonResponse);
+                System.out.println("RESPONSE: " + jsonResponse);
                 nextRequest = ProcessResponse(jsonResponse);
 
                 if (nextRequest == null) break;
                 out.println(nextRequest);
+
+                System.out.println("REQUEST: " + nextRequest);
             }
 
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+            System.out.println("STATUS: Connection closed.\n\n");
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -106,13 +108,13 @@ public class RemoteCalculatorClient implements ICalculator {
             case Protocol.STATE_AUTHENTICATION_SUCCESS:
                 request = calculationRequest;
                 break;
-            case Protocol.STATE_AUTHENTICATION_FAIL:
+            case Protocol.STATE_AUTHENTICATION_FAILED:
                 throw new CalculationException("Access denied on RemoteCalculationService for username " + username);
             case Protocol.STATE_CALCULATION_SUCCESS:
                 calculationResult = response.getInt("result");
                 break;
-            case Protocol.STATE_CALCULATION_FAIL:
-                break;
+            case Protocol.STATE_CALCULATION_FAILED:
+                throw new CalculationException(error);
             default:
                 throw new InvalidStateException("There is no action for state " + status);
         }
