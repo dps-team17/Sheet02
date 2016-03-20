@@ -8,6 +8,7 @@ public class Server {
     public static void main(String[] args) {
 
         Socket clientSocket;
+        ICalculator calculator = new Calculator();
 
         try (ServerSocket serverSocket = new ServerSocket(Protocol.SERVICE_PORT)) {
 
@@ -15,7 +16,7 @@ public class Server {
 
             while ((clientSocket = serverSocket.accept()) != null) {
 
-                new Protocol().replay(clientSocket);
+                new RemoteCalculatorService(calculator).handleRequest(clientSocket);
             }
 
         } catch (IOException e) {

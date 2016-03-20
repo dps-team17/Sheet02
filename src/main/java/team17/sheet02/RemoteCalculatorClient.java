@@ -5,6 +5,7 @@ import sun.plugin.dom.exception.InvalidStateException;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.naming.AuthenticationException;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -23,28 +24,28 @@ public class RemoteCalculatorClient implements ICalculator {
     }
 
     @Override
-    public int Add(int a, int b) {
+    public int Add(int a, int b) throws CalculationException {
         CreateRequestString("+", a, b);
         CalculateRemote();
         return calculationResult;
     }
 
     @Override
-    public int Subtract(int a, int b) {
+    public int Subtract(int a, int b) throws CalculationException {
         CreateRequestString("-", a, b);
         CalculateRemote();
         return calculationResult;
     }
 
     @Override
-    public int Multiply(int a, int b) {
+    public int Multiply(int a, int b) throws CalculationException {
         CreateRequestString("*", a, b);
         CalculateRemote();
         return calculationResult;
     }
 
     @Override
-    public int Lukas(int a) {
+    public int Lukas(int a) throws CalculationException {
         CreateRequestString("lukas", a);
         CalculateRemote();
         return calculationResult;
@@ -61,7 +62,7 @@ public class RemoteCalculatorClient implements ICalculator {
         calculationRequest = builder.build().toString();
     }
 
-    private void CalculateRemote() {
+    private void CalculateRemote() throws CalculationException {
 
         try (
                 Socket socket = new Socket(host, Protocol.SERVICE_PORT);
@@ -88,7 +89,7 @@ public class RemoteCalculatorClient implements ICalculator {
         }
     }
 
-    private String ProcessResponse(String jsonResponse) {
+    private String ProcessResponse(String jsonResponse) throws CalculationException {
 
         JsonObject response = Json.createReader(new StringReader(jsonResponse)).readObject();
 
@@ -99,12 +100,14 @@ public class RemoteCalculatorClient implements ICalculator {
 
         switch (status) {
 
-            case Protocol.STATE_AUTHENTICATION:
+            case Protocol.STATE_AUTHENTICATION_REQUIRED:
                 request = getAuthenticationRequest();
                 break;
-            case Protocol.STATE_READY:
+            case Protocol.STATE_AUTHENTICATION_SUCCESS:
                 request = calculationRequest;
                 break;
+            case Protocol.STATE_AUTHENTICATION_FAIL:
+                throw new CalculationException("Access denied on RemoteCalculationService for username " + username);
             case Protocol.STATE_CALCULATION_SUCCESS:
                 calculationResult = response.getInt("result");
                 break;

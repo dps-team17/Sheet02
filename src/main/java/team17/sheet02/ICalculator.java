@@ -1,14 +1,14 @@
 package team17.sheet02;
 
-/**
- * Created by adanek on 19.03.2016.
- */
+
+import javax.naming.AuthenticationException;
+
 public interface ICalculator {
-    int Add(int a, int b);
+    int Add(int a, int b) throws CalculationException;
 
-    int Subtract(int a, int b);
+    int Subtract(int a, int b) throws CalculationException;
 
-    int Multiply(int a, int b);
+    int Multiply(int a, int b) throws CalculationException;
 
-    int Lukas(int a);
+    int Lukas(int a) throws CalculationException;
 }

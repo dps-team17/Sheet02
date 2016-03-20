@@ -13,7 +13,7 @@ public class Client {
     public static void main(String[] args) {
 
         String host = "127.0.0.1";
-        String username = "Daniel";
+        String username = "Danielo";
 
         int param1, param2, result;
         ICalculator calculator = new RemoteCalculatorClient(host, username);
@@ -21,9 +21,12 @@ public class Client {
         param1 = 1;
         param2 = 1;
 
-        result = calculator.Add(param1, param2);
-        //result = calculator.Lukas(10);
+        try {
+            result = calculator.Add(param1, param2);
 
-        System.out.println(String.format("%d + %d = %d", param1, param2, result));
+            System.out.println(String.format("%d + %d = %d", param1, param2, result));
+        } catch (CalculationException e){
+            System.err.println(e.getMessage());
+        }
     }
 }

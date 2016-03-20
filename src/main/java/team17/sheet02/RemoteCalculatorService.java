@@ -4,7 +4,8 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.naming.OperationNotSupportedException;
-import java.io.StringReader;
+import java.io.*;
+import java.net.Socket;
 
 public class RemoteCalculatorService {
 
@@ -20,13 +21,37 @@ public class RemoteCalculatorService {
         this.calculator = calculator;
     }
 
-    public String Process(String jsonRequest) {
+    public void handleRequest(Socket server) {
+        try (PrintWriter out = new PrintWriter(server.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(server.getInputStream()));
+        ) {
+            RemoteCalculatorService srv = new RemoteCalculatorService(new Calculator());
+            String request = null;
+            String response = null;
+
+            do {
+                System.out.println(String.format("DEBUG: " + request));
+                response = srv.Process(request);
+                if (response == null) break;
+
+                out.println(response);
+
+            } while ((request = in.readLine()) != null);
+
+            server.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String Process(String jsonRequest) {
 
         String response = null;
 
         switch (state) {
             case INIT:
-                response = getResponseString(Protocol.STATE_AUTHENTICATION,null, 0);
+                response = getResponseString(Protocol.STATE_AUTHENTICATION_REQUIRED, null, 0);
                 state = AUTHENTICATION;
                 break;
             case AUTHENTICATION:
@@ -80,11 +105,7 @@ public class RemoteCalculatorService {
         return result;
     }
 
-    private boolean isAuthorized(String username){
-        return username.equals("Daniel");
-    }
-
-    private String getResponseString(String status, String error, int result){
+    private String getResponseString(String status, String error, int result) {
 
         JsonObjectBuilder builder = Json.createObjectBuilder();
         builder.add("status", status);
@@ -99,13 +120,17 @@ public class RemoteCalculatorService {
         return builder.build().toString();
     }
 
-    private String getAuthenticationResponse(String jsonRequest){
+    private String getAuthenticationResponse(String jsonRequest) {
         JsonObject request = Json.createReader(new StringReader(jsonRequest)).readObject();
         String username = request.getString("name");
 
-        if(!username.equals("Daniel")) return null;
+        if (!isAuthorized(username)) return getResponseString(Protocol.STATE_AUTHENTICATION_FAIL, null, 0);
 
         state = READY;
-        return getResponseString(Protocol.STATE_READY, null, 0);
+        return getResponseString(Protocol.STATE_AUTHENTICATION_SUCCESS, null, 0);
+    }
+
+    private boolean isAuthorized(String username) {
+        return username.equals("Daniel");
     }
 }
