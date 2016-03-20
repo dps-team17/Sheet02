@@ -1,7 +1,5 @@
 package team17.sheet02;
 
-import sun.plugin.dom.exception.InvalidStateException;
-
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -116,7 +114,7 @@ class RemoteCalculatorClient implements ICalculator {
             case Protocol.STATE_CALCULATION_FAILED:
                 throw new CalculationException(error);
             default:
-                throw new InvalidStateException("There is no action for state " + status);
+                throw new CalculationException("There is no action for state " + status);
         }
 
         return request;
