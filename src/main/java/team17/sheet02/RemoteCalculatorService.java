@@ -30,7 +30,7 @@ class RemoteCalculatorService {
             String response;
 
             do {
-                System.out.println("DEBUG: " + request);
+                System.out.println("DEBUG (id:" + Thread.currentThread().getId() + "): " + request);
                 response = srv.Process(request);
                 if (response == null) break;
 
@@ -131,6 +131,6 @@ class RemoteCalculatorService {
     }
 
     private boolean isAuthorized(String username) {
-        return username.equals("Daniel");
+        return username.equalsIgnoreCase("Daniel") || username.equalsIgnoreCase("Martin");
     }
 }
